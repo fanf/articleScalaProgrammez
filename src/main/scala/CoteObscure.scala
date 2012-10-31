@@ -90,6 +90,26 @@ object CoteObscure_v2 {
   //ici, préciser le type pour montrer les constructeurs de type
   val squad : Seq[EmpireSoldier] = Seq(noviceTrooper, veteranRoyalGuard,  DarthVader, experiencedTrooper)
   
+  
+  //pattern matching
+  
+  //pattern matching simple
+  for(value <- Seq("42", 42, true) ) {
+    value match {
+      case "42"  => println("The string 42")
+      case i:Int => println("An int: " + i.toString)
+      case x     => println("Something else: " + x.toString)
+    }
+  }
+  
+  //pattern matching plus complexe (descend dans les case classes)
+  (noviceTrooper:EmpireSoldier) match {
+    case StormTrooper(itsStrenght, StormTrooperGun(currentWearing)) => 
+      println("Found a soldier with %s strength and a weapon with a wearing of".format(itsStrenght, currentWearing))
+    case _ => println("Not a storm trooper")
+  }
+  
+  
   //ici, on cherche à connaitre la puissance d'attaque totale de notre équipe
   val squadAttack = squad.map { soldier => soldier.attack }.sum
   

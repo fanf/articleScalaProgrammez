@@ -5,6 +5,8 @@
  */
 
 
+package empire
+
 object CoteObscure_v1 {
 
   /**
@@ -16,6 +18,61 @@ object CoteObscure_v1 {
    * - type inférence 
    */
   
+  /**
+   * Ici: présenter les traits: interfaces, def pour méthodes, 
+   * type déclaré après le "nom:". 
+   */
+  trait EmpireSoldier {
+    def strenght: Int
+    def attack : Int
+    def canUseTheForce : Boolean
+  }
+  
+  //pas sûr de vouloir montrer ca ?
+  trait TrainedSoldier extends EmpireSoldier {
+    abstract override def attack = super.attack + 50
+  }
+
+  /**
+   * Ici montrer:
+   * - le constructeur par défaut, les constructeurs auxiliaires qui utilisent le constructeur principal
+   * - les valeurs par défaut
+   * - le fait que strenght soit un attribut, que "val" donne la visibilité publique
+   * - le fait que val override def
+   * - la différence val / def
+   * - var
+   * - type Unit, le fait qu'on a toujours un type de retour
+   */
+  class StormTrooper(override val strenght : Int = 10) extends EmpireSoldier {
+    
+    def this(strenght: Int, bonus: Int) = this(strenght+bonus)
+    
+    private var experience : Int = 0
+    
+    def attack = strenght + experience
+    
+    def trains : Unit = {
+      if(this.experience < 20) { this.experience = experience + 1 }
+    }
+    
+    val canUseTheForce = false
+  }
+
+  val trooper = new StormTrooper(42) with TrainedSoldier
+  
+  while(trooper.attack < 50) {
+    trooper.trains
+  }
+
+  
+  trait IsASith {
+    val canUseTheForce = true
+  }
+   
+  object DarthVader extends EmpireSoldier with IsASith {
+    val strenght = 200
+    def attack = strenght
+  }
   
 }
 

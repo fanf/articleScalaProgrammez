@@ -23,7 +23,7 @@ object CoteObscure_v1 {
    * type déclaré après le "nom:". 
    */
   trait EmpireSoldier {
-    def strenght: Int
+    def strength: Int
     def attack : Int
     def canUseTheForce : Boolean
   }
@@ -37,19 +37,19 @@ object CoteObscure_v1 {
    * Ici montrer:
    * - le constructeur par défaut, les constructeurs auxiliaires qui utilisent le constructeur principal
    * - les valeurs par défaut
-   * - le fait que strenght soit un attribut, que "val" donne la visibilité publique
+   * - le fait que strength soit un attribut, que "val" donne la visibilité publique
    * - le fait que val override def
    * - la différence val / def
    * - var
    * - type Unit, le fait qu'on a toujours un type de retour
    */
-  class StormTrooper(override val strenght : Int = 10) extends EmpireSoldier {
+  class StormTrooper(override val strength : Int = 10) extends EmpireSoldier {
     
-    def this(strenght: Int, bonus: Int) = this(strenght+bonus)
+    def this(strength: Int, bonus: Int) = this(strength+bonus)
     
     private var experience : Int = 0
     
-    def attack = strenght + experience
+    def attack = strength + experience
     
     def trains : Unit = {
       if(this.experience < 20) { this.experience = experience + 1 }
@@ -68,10 +68,19 @@ object CoteObscure_v1 {
   trait IsASith {
     val canUseTheForce = true
   }
-   
-  object DarthVader extends EmpireSoldier with IsASith {
-    val strenght = 200
-    def attack = strenght
+  
+  trait TieFighterPilot {
+    val canPilotTieFighter = true
+  }
+
+  class Sith(override val strength:Int) extends EmpireSoldier with IsASith {
+    def attack = strength * 2
+  }
+  
+  class RogueSith(strength:Int) extends IsASith
+
+  object DarthVader extends Sith(200) with TieFighterPilot {
+    override def attack = strength * 3
   }
   
 }
@@ -108,13 +117,13 @@ object CoteObscure_v2 {
   }
   
   trait EmpireSoldier {
-    def strenght: Int
+    def strength: Int
     def weapon: Weapon
     def canUseTheForce : Boolean
     
     final def attack : Int = {
       val bonus = { if(canUseTheForce) 50 else 0 }
-      bonus + strenght + weapon.attack
+      bonus + strength + weapon.attack
     }
     
   }
@@ -127,10 +136,10 @@ object CoteObscure_v2 {
     val canUseTheForce = false
   }
 
-  case class StormTrooper(strenght: Int, weapon: StormTrooperGun) extends EmpireSoldier with IsNotAJedi
-  case class EmperorRoyalGuard(strenght: Int, weapon: EmperorRoyalGuardSword) extends EmpireSoldier with IsNotAJedi
+  case class StormTrooper(strength: Int, weapon: StormTrooperGun) extends EmpireSoldier with IsNotAJedi
+  case class EmperorRoyalGuard(strength: Int, weapon: EmperorRoyalGuardSword) extends EmpireSoldier with IsNotAJedi
   case object DarthVader extends EmpireSoldier with IsAJedi {
-    val strenght = 200
+    val strength = 200
     val weapon = DarthVaderLaserSaber
   }
   
@@ -140,9 +149,9 @@ object CoteObscure_v2 {
    * d'odre supérieur. 
    */
   
-  val noviceTrooper = StormTrooper(strenght = 5, StormTrooperGun(wearing = 0))
-  val experiencedTrooper = StormTrooper(strenght = 25, StormTrooperGun(wearing = 17))  
-  val veteranRoyalGuard = EmperorRoyalGuard(strenght = 50, EmperorRoyalGuardSword(wearing = 43))
+  val noviceTrooper = StormTrooper(strength = 5, StormTrooperGun(wearing = 0))
+  val experiencedTrooper = StormTrooper(strength = 25, StormTrooperGun(wearing = 17))  
+  val veteranRoyalGuard = EmperorRoyalGuard(strength = 50, EmperorRoyalGuardSword(wearing = 43))
   
   //ici, préciser le type pour montrer les constructeurs de type
   val squad : Seq[EmpireSoldier] = Seq(noviceTrooper, veteranRoyalGuard,  DarthVader, experiencedTrooper)
@@ -161,8 +170,8 @@ object CoteObscure_v2 {
   
   //pattern matching plus complexe (descend dans les case classes)
   (noviceTrooper:EmpireSoldier) match {
-    case StormTrooper(itsStrenght, StormTrooperGun(currentWearing)) => 
-      println("Found a soldier with %s strength and a weapon with a wearing of".format(itsStrenght, currentWearing))
+    case StormTrooper(itsstrength, StormTrooperGun(currentWearing)) => 
+      println("Found a soldier with %s strength and a weapon with a wearing of".format(itsstrength, currentWearing))
     case _ => println("Not a storm trooper")
   }
   
@@ -182,7 +191,7 @@ object CoteObscure_v2 {
    * et avoir une force de plus de 20. 
    * Note: le type de la collection est plus précis que le type de départ. 
    */
-  val promotableTroopers : Seq[StormTrooper] = squad.collect { case trooper @ StormTrooper(strenght, weapon) if(strenght > 20) => trooper }
+  val promotableTroopers : Seq[StormTrooper] = squad.collect { case trooper @ StormTrooper(strength, weapon) if(strength > 20) => trooper }
   
   
   

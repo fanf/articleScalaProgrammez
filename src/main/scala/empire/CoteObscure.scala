@@ -95,25 +95,32 @@ object CoteObscure_v2 {
    */
   
   trait Weapon {
-    def isRangeWeapon : Boolean
     def attack : Int
     def wearing: Int
+  }  
+  trait Ranged
+  case class LightSaber(wearing:Int) extends Weapon {
+    val attack = 50
   }
-  
-  case class EmperorRoyalGuardSword(wearing:Int) extends Weapon {
-    val isRangeWeapon = false
-    val attack = 20
+  case class BlasterGun(wearing:Int) extends Weapon with Ranged {
+    val attack = 5
+  }  
+  case class HeavyBlasterGun(override val wearing:Int) extends BlasterGun(wearing) {
+    override val attack = 10
+  }  
+  case object DarthVaderLightSaber extends LightSaber(0) {
+   override val attack = 100
   }
 
-  case class StormTrooperGun(wearing:Int) extends Weapon {
-    val isRangeWeapon = true
-    val attack = 5
-  }
+  case class EmperorGuardSword(wearing:Int) extends Weapon {
+    val attack = 20
+  }  
   
-  case object DarthVaderLaserSaber extends Weapon {
-    val isRangeWeapon = false
-    val attack = 100
-    val wearing = 0
+  def isRangeWeapon(weapon:Weapon) = weapon match {
+    case BlasterGun(_) => true
+    case LightSaber(_) => false
+    case _:Ranged => true
+    case _ => false
   }
   
   trait EmpireSoldier {
@@ -136,12 +143,10 @@ object CoteObscure_v2 {
     val canUseTheForce = false
   }
 
-  case class StormTrooper(strength: Int, weapon: StormTrooperGun) extends EmpireSoldier with IsNotAJedi
-  case class EmperorRoyalGuard(strength: Int, weapon: EmperorRoyalGuardSword) extends EmpireSoldier with IsNotAJedi
-  case object DarthVader extends EmpireSoldier with IsAJedi {
-    val strength = 200
-    val weapon = DarthVaderLaserSaber
-  }
+  case class StormTrooper(strength: Int, weapon: BlasterGun) extends EmpireSoldier with IsNotAJedi
+  case class EmperorGuard(strength: Int, weapon: EmperorGuardSword) extends EmpireSoldier with IsNotAJedi
+  case class Sith(strength: Int, weapon: LightSaber) extends EmpireSoldier with IsAJedi
+  case object DarthVader extends Sith(200,DarthVaderLightSaber)
   
   
   /**
@@ -149,9 +154,10 @@ object CoteObscure_v2 {
    * d'odre supérieur. 
    */
   
-  val noviceTrooper = StormTrooper(strength = 5, StormTrooperGun(wearing = 0))
-  val experiencedTrooper = StormTrooper(strength = 25, StormTrooperGun(wearing = 17))  
-  val veteranRoyalGuard = EmperorRoyalGuard(strength = 50, EmperorRoyalGuardSword(wearing = 43))
+  val noviceTrooper = StormTrooper(strength = 5, BlasterGun(wearing = 0))
+  val experiencedTrooper = StormTrooper(strength = 25, HeavyBlasterGun(wearing = 17))  
+  val veteranRoyalGuard = EmperorGuard(strength = 50, EmperorGuardSword(wearing = 43))
+  val sith = Sith(strength = 50, LightSaber(wearing = 26))
   
   //ici, préciser le type pour montrer les constructeurs de type
   val squad : Seq[EmpireSoldier] = Seq(noviceTrooper, veteranRoyalGuard,  DarthVader, experiencedTrooper)
@@ -170,7 +176,7 @@ object CoteObscure_v2 {
   
   //pattern matching plus complexe (descend dans les case classes)
   (noviceTrooper:EmpireSoldier) match {
-    case StormTrooper(itsstrength, StormTrooperGun(currentWearing)) => 
+    case StormTrooper(itsstrength, BlasterGun(currentWearing)) => 
       println("Found a soldier with %s strength and a weapon with a wearing of".format(itsstrength, currentWearing))
     case _ => println("Not a storm trooper")
   }
@@ -201,7 +207,7 @@ object CoteObscure_v2 {
    * équipe qui se battra au corp à corp (épées et sabres).
    */
   
-  val teams = squad.groupBy { soldier => soldier.weapon.isRangeWeapon }
+  val teams = squad.groupBy { soldier => isRangeWeapon(soldier.weapon) }
   
   //d'autres méthodes sympa ?
 }

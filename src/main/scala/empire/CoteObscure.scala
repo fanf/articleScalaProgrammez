@@ -68,10 +68,13 @@ object CoteObscure_v1 {
   trait IsASith {
     val canUseTheForce = true
   }
+
+  class Sith(override val strength:Int) extends EmpireSoldier with IsASith {
+    def attack = strength * 2
+  }
    
-  object DarthVader extends EmpireSoldier with IsASith {
-    val strength = 200
-    def attack = strength
+  object DarthVader extends Sith(200) {
+    override def attack = strength * 3
   }
   
 }

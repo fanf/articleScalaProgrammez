@@ -97,24 +97,28 @@ object CoteObscure_v2 {
   trait Weapon {
     def attack : Int
     def wearing: Int
-  }  
+  }
   trait Ranged
+
   case class LightSaber(wearing:Int) extends Weapon {
     val attack = 50
   }
   case class BlasterGun(wearing:Int) extends Weapon with Ranged {
     val attack = 5
   }  
-  case class HeavyBlasterGun(override val wearing:Int) extends BlasterGun(wearing) {
-    override val attack = 10
-  }  
-  case object DarthVaderLightSaber extends LightSaber(0) {
-   override val attack = 100
+  case object DarthVaderLightSaber extends Weapon {
+   val attack = 100
+   val wearing = 1337
   }
+  
+ 
 
   case class EmperorGuardSword(wearing:Int) extends Weapon {
     val attack = 20
   }  
+  case class HeavyBlasterGun(wearing:Int) extends Weapon with Ranged {
+   val attack = 10
+  }
   
   def isRangeWeapon(weapon:Weapon) = weapon match {
     case BlasterGun(_) => true
@@ -135,19 +139,22 @@ object CoteObscure_v2 {
     
   }
   
-  trait IsAJedi {
+  trait IsASith {
     val canUseTheForce = true
+    def useTheForce[T](power: Seq[T] => Seq[T], targets :Seq[T]) = power(targets)
   }
   
-  trait IsNotAJedi {
+  trait IsNotASith {
     val canUseTheForce = false
   }
 
-  case class StormTrooper(strength: Int, weapon: BlasterGun) extends EmpireSoldier with IsNotAJedi
-  case class EmperorGuard(strength: Int, weapon: EmperorGuardSword) extends EmpireSoldier with IsNotAJedi
-  case class Sith(strength: Int, weapon: LightSaber) extends EmpireSoldier with IsAJedi
-  case object DarthVader extends Sith(200,DarthVaderLightSaber)
-  
+  case class StormTrooper(strength: Int, weapon: Weapon with Ranged) extends EmpireSoldier with IsNotASith
+  case class EmperorGuard(strength: Int, weapon: EmperorGuardSword) extends EmpireSoldier with IsNotASith
+  case class Sith(strength: Int, weapon: LightSaber) extends EmpireSoldier with IsASith
+  case object DarthVader  extends EmpireSoldier with IsASith {
+    val strength = 200
+    val weapon = DarthVaderLightSaber
+  }
   
   /**
    * Démonstration de quelques fonctions sur les collections, en particulier les fonctions
@@ -175,12 +182,22 @@ object CoteObscure_v2 {
   }
   
   //pattern matching plus complexe (descend dans les case classes)
-  (noviceTrooper:EmpireSoldier) match {
-    case StormTrooper(itsstrength, BlasterGun(currentWearing)) => 
-      println("Found a soldier with %s strength and a weapon with a wearing of".format(itsstrength, currentWearing))
-    case _ => println("Not a storm trooper")
+  def inMind(soldier:EmpireSoldier) ={
+    val mind = soldier  match {
+    case StormTrooper(_, BlasterGun(currentWearing)) => 
+      "Lunchtime soon...only %d shots this morning".format(currentWearing)
+    case Sith(strength,_) if strength > 50 => 
+      "Stop reading my mind"
+    case DarthVader => 
+      "Where ... is .. Padme ?"
+    case _:Sith => 
+      "No one can read my mind!"
+    case _ => "They are not the droid I was looking for"
+  }
+  println(mind)
   }
   
+  val findWeapon: EmpireSoldier => Weapon = (soldier:EmpireSoldier) => soldier.weapon
   
   //ici, on cherche à connaitre la puissance d'attaque totale de notre équipe
   val squadAttack = squad.map { soldier => soldier.attack }.sum
@@ -199,7 +216,27 @@ object CoteObscure_v2 {
    */
   val promotableTroopers : Seq[StormTrooper] = squad.collect { case trooper @ StormTrooper(strength, weapon) if(strength > 20) => trooper }
   
+  /*
+   * Quelques fonctions représentant l'usage de la force par les sith
+   * On met en avant l'aspect fonctionnel de Scala
+   */
+  def senseForceUser(soldiers :Seq[EmpireSoldier]):Seq[EmpireSoldier] =
+   soldiers.filter(soldier => soldier.canUseTheForce) 
+
+  def deflectLaser(soldiers :Seq[EmpireSoldier]):Seq[EmpireSoldier] = soldiers.map{
+    _ match {
+      case StormTrooper(_,w) if isRangeWeapon(w) => StormTrooper(0,BlasterGun(0))
+      case s:Sith => s
+    }
+  }
   
+  def scanSquad(squad :Seq[EmpireSoldier]) = squad.foreach(inMind(_))
+  
+  def senseForceUser2(soldiers:Seq[EmpireSoldier]) = for (
+    soldier <- soldiers
+    if soldier.canUseTheForce
+  ) yield soldier
+      
   
   /*
    * On veut se défendre contre des rebelles qui attaques à la fois de positions lointaine et au corps à corps.

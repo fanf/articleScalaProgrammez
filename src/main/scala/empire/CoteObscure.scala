@@ -55,49 +55,59 @@ object CoteObscure_v1 {
     override val canUseTheForce = false
   }
 
-  val trooper = new StormTrooper(42) 
   
-  while(trooper.attack < 50) {
-    trooper.getATrainingSession
-  }
+  
+  val superTrooper = new StormTrooper(42) 
+  println(superTrooper.strength) //=> 42
 
   
   
-  object StormTrooper {
-    /*
-     * Apply est une méthode magique en Scala: on a le droit de ne pas mettre 
-     * ".apply" pour l'appeler. 
-     * Ainsi, StormTrooper.apply(42) peut s'abbréger en StormTrooper(42).
-     * Et comme nous définisson une valeur par défaut, nous pouvons même réduire en
-     * "StormTrooper()" pour créer un storm trooper de force 10, voir "StormTrooper" 
-     * puisque les parenthèses sont optionnelles dans ce cas. 
-     */
-    def apply(strength : Int = 10) = new StormTrooper(strength)
-    
-    //permet de créer un certain nombre de nouveau Storm Troopers.
-    def makeClones(numberOfClones: Int) = Array.fill(numberOfClones)(StormTrooper)
-  }
+  val defaultTrooper = new StormTrooper
+  println(defaultTrooper.strength) //=> 10
   
   
-  
+
   
   trait IsASith {
     val canUseTheForce = true
-  }
-  
-  trait TieFighterPilot {
-    val canPilotTieFighter = true
   }
 
   class Sith(override val strength: Int) extends EmpireSoldier with IsASith {
     def attack = strength * 2
   }
   
-  class RogueSith(strength: Int) extends IsASith
 
+  
+  
+  trait TieFighterPilot {
+    val canPilotTieFighter = true
+  }
+  
   object DarthVader extends Sith(200) with TieFighterPilot {
     override def attack = strength * 3
   }
+  
+  
+  
+  object StormTrooper {
+    /*
+     * Apply est une méthode magique en Scala: 
+     * on a le droit de ne pas mettre ".apply" pour l'appeler. 
+     * Ainsi, StormTrooper.apply(42) peut s'abbréger en StormTrooper(42).
+     */
+    def apply(strength : Int = 10) = new StormTrooper(strength)
+    
+    //permet de créer un certain nombre de nouveau Stormtroopers.
+    def makeClones(numberOfClones: Int) = Array.fill(numberOfClones)(StormTrooper)
+  }
+
+  //créer un Stormtrouper par défaut depuis la factory
+  val trooper1 = StormTrooper.apply()
+  //équivalent à:
+  val trooper2 = StormTrooper
+  // créer 5 Stormtroopers
+  val troopers = StormTrooper.makeClones(5)
+  
   
 }
 
@@ -118,7 +128,7 @@ object CoteObscure_v2 {
     def wearing: Int
   }
   
-  //indique qu'un arme peut attaquer de loin
+  //indique qu'une arme peut attaquer de loin
   trait Ranged
 
   //quelques armes standards
@@ -138,46 +148,19 @@ object CoteObscure_v2 {
    val wearing = 0
   }
 
-
   
   
   
-//  //préciser que bien sûr, on complexifie pour montrer l'utilisation du pattern matching
-//  def isRangeWeapon(weapon:Weapon) = weapon match {
-//    case BlasterGun(_)        => true
-//    case DarthVaderLightSaber => false
-//    case _: Ranged            => true
-//    case _                    => false
-//  }
-  
-  /*
-   * Ceci écrira: "The string 42", "An int: 42", "Something else!"
-   */
-  for(value <- Seq("42", 42, "43") ) {
-    value match {
-      case "42"  => println("The string 42")
-      case i:Int => println("An int: " + i.toString)
-      case _     => println("Something else!")
-    }
-  }  
-  
-//conserver la premiere définition
+  //conserver la premiere définition
   trait EmpireSoldier {
     def strength      : Int
     def weapon        : Weapon
     def canUseTheForce: Boolean
   }  
-//    final def attack : Int = {
-//      val bonus = { if(canUseTheForce) 50 else 0 }
-//      bonus + strength + weapon.attack
-//    }
-//    
-//  }
-  
   trait IsASith { val canUseTheForce = true }
-  
   trait IsNotASith { val canUseTheForce = false }
 
+  
   
   case class StormTrooper(strength: Int, weapon: Weapon with Ranged) 
     extends EmpireSoldier with IsNotASith
@@ -191,55 +174,75 @@ object CoteObscure_v2 {
   }
   
   
-    
-  /**
-   * Démonstration de quelques fonctions sur les collections, en particulier les fonctions
-   * d'odre supérieur. 
-   */
-  
-  val noviceTrooper = StormTrooper(strength = 5, BlasterGun(wearing = 0))
-  val experiencedTrooper = StormTrooper(strength = 25, HeavyBlasterGun(wearing = 17))  
-  val veteranRoyalGuard = EmperorGuard(strength = 50, EmperorGuardSword(wearing = 43))
   
   /*
-   * Ici, nous voyons que Seq est un type paramétré par le type de ses éléments
+   * Ceci écrira: "The string 42", "An int: 42", "Something else!"
    */
-  val squad : Seq[EmpireSoldier] = 
-    Seq(noviceTrooper, veteranRoyalGuard,  DarthVader, experiencedTrooper)
-  
-  
-  //pattern matching
-  
-  //pattern matching simple
-  
-  
+  for(value <- Seq("42", 42, "43") ) {
+    value match {
+      case "42"  => println("The string 42")
+      case i:Int => println("An int: " + i.toString)
+      case _     => println("Something else!")
+    }
+  }  
   
 
+
   
-  //pattern matching plus complexe (descend dans les case classes)
-  
+  /*
+   * pattern matching plus complexe avec déconstruction des case classes
+   */
   def showMeYourMind(soldier:EmpireSoldier) : Unit = {
+    
     val inMind = soldier match {
       case StormTrooper(_, BlasterGun(currentWearing)) => 
-        "Lunchtime soon... And only %d shots this morning".format(currentWearing)
+        "Lunchtime soon, and only %d shots!".format(currentWearing)
       case DarthVader => 
         "Where ... is .. Padme ?"
       case sith:(IsASith with EmpireSoldier) if sith.strength > 50 => 
         "Stop reading my mind"
       case _ => "They are not the droid I was looking for"
     }
+    
     println(inMind)
   }
   
   
   
-  val attack: (EmpireSoldier => Int) = { soldier => 
-    val bonus = { if(soldier.canUseTheForce) 50 else 0 }
-    bonus + soldier.strength + soldier.weapon.attack
+  val attack: (EmpireSoldier => Int) = { 
+    //l'inférence de type permet de ne pas préciser "EmpireSoldier"
+    soldier => {
+      val bonus = { if(soldier.canUseTheForce) 50 else 0 }
+      bonus + soldier.strength + soldier.weapon.attack
+    }
   }
   
-  //ici, on cherche à connaitre la puissance d'attaque totale de notre équipe
+
   
+    
+  /**
+   * Démonstration de quelques fonctions sur les collections, en particulier les fonctions
+   * d'odre supérieur. 
+   */
+  
+  
+  /*
+   * Nous ne sommes pas obligé de préciser le nom des paramètres,
+   * mais c'est généralement plus parlant
+   */
+  val novice      = StormTrooper(strength = 5 , BlasterGun(       wearing = 0 ))
+  val experienced = StormTrooper(strength = 25, HeavyBlasterGun(  wearing = 17))  
+  val veteran     = EmperorGuard(strength = 50, EmperorGuardSword(wearing = 43))
+  
+  /*
+   * Nous voyons que Seq est un type paramétré par le type de ses éléments.
+   * L'inférence de type aurait pu trouver toute seule le type de squad.
+   */
+  val squad : Seq[EmpireSoldier] = 
+    Seq(novice, veteran,  DarthVader, experienced)
+  
+
+    
   
   /*
    * On cherche à connaitre tous les soldats qui ont des armes abimées, 
@@ -269,19 +272,17 @@ object CoteObscure_v2 {
 
 
   /*
-   * foreach  permet l’application d’une fonction qui ne retourne pas de valeur
-   * à chaque élément de la collection.
-   * Ici, nous voyons que foreach est une fonction d'ordre supérieur: il
-   * prend en argument la fonction "showMeYourMind"
-   * A l'exécution, nous obtiendrons sur la console ce que pense chaque
-   * membre de l'équipe. 
+   * foreach applique à chaque élément de la séquence la fonction 
+   * passée en argument. A l'exécution, nous obtiendrons ce que 
+   * pense chaque membre de l'équipe. 
    */
-  def readSquadMinds(squad: Seq[EmpireSoldier]) = squad.foreach( showMeYourMind )
+  def readSquadMinds(squad: Seq[EmpireSoldier]): Unit = 
+    squad.foreach( showMeYourMind )
   
   /*
    * Nous pouvons simplement trouver la puissance d'attaque d'une
-   * équipe construisant la séquence composée des attaques de chaque 
-   * membre, puis en en faisant la somme. 
+   * équipe en construisant la séquence composée des attaques de 
+   * chaque membre, puis en en faisant la somme. 
    */
   val squadAttack = squad.map { soldier => attack(soldier) }.sum
   
@@ -298,10 +299,9 @@ object CoteObscure_v2 {
    
    
   /*
-   * On veut se défendre contre des rebelles qui attaques à la fois de positions
-   * lointaine et au corps à corps. Il faut donc séparer la squad en une équipe 
-   * qui tirera sur les embusqués (armes de tir nécessaire) et une équipe qui 
-   * se battra au corp à corp (épées et sabres).
+   * Des rebelles attaquent à la fois de positions lointaines et au corps à 
+   * corps. Il faut donc séparer la squad en une équipe qui tirera sur les 
+   * embusqués (armes de tir nécessaires) et une équipe qui se battra en mélée.
    */  
   val teams: Map[Boolean, Seq[EmpireSoldier]] = 
     squad.groupBy { soldier => soldier.weapon match {
@@ -311,9 +311,8 @@ object CoteObscure_v2 {
   }
   
   /*
-   * Les bons storm trooper peuvent être promus en garde impériaux. 
-   * La condition est qu'ils doivent effectivement être un Storm Trooper, 
-   * et avoir une force de plus de 20. 
+   * Les bons Stormrooper peuvent être promus en garde impériaux. Pour cela, ils 
+   * doivent effectivement être un Stormtrooper et avoir une force de plus de 20. 
    * Note: le type de la collection est plus précis que le type de départ. 
    */  
   val promotableTroopers : Seq[StormTrooper] = squad.collect { 
